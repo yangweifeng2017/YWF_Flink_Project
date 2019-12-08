@@ -5,6 +5,7 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.PrintSinkFunction;
 import org.apache.flink.util.Collector;
 
 /**
@@ -28,8 +29,18 @@ public class SocketTextStreamWordCount {
         SingleOutputStreamOperator<Tuple2<String, Integer>> sum = stream.flatMap(new LineSplitter())
                 .keyBy(0) //以数组的第一个元素作为分组的key group by
                 .sum(1); //对数组的第二个元素进行求和
-        sum.print();
-        env.execute("Java WordCount from SocketTextStream Example");
+
+       // sum.print();
+        sum.addSink(new PrintSinkFunction<>()); //添加输出sink
+
+        try{
+            env.execute("Java WordCount from SocketTextStream Example");
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            System.out.println("实时流数据异常");
+        }
+
     }
 
     public static final class LineSplitter implements FlatMapFunction<String, Tuple2<String, Integer>> {
